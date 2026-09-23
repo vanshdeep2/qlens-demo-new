@@ -1,0 +1,219 @@
+{
+ "serial_number_generation_when_unavailable": [
+  {
+   "thread": "6a5b15fe443721b3112f81b7",
+   "message": "6a691b75ff231ccf3b627f1a",
+   "seq": 5,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-29 02:45",
+   "rank": 1
+  },
+  {
+   "thread": "6a5b15fe443721b3112f81b7",
+   "message": "6a690fb49ed665b22e7d88a1",
+   "seq": 4,
+   "direction": "inbound",
+   "sender": "customer",
+   "sentAt": "2026-07-29 01:52",
+   "rank": 1
+  }
+ ],
+ "data_erasure_request_routing": [
+  {
+   "thread": "6a6838b39c5991a121d580a0",
+   "message": "6a68a2b69a25217743781169",
+   "seq": 2,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-28 18:08",
+   "rank": 19
+  },
+  {
+   "thread": "6a6838b39c5991a121d580a0",
+   "message": "6a6838b29ed665b22e5e5042",
+   "seq": 1,
+   "direction": "inbound",
+   "sender": "customer",
+   "sentAt": "2026-07-28 10:35",
+   "rank": 19
+  }
+ ],
+ "uk_warranty_replacement_escalation": [
+  {
+   "thread": "6a64a79f1471d3f8a6f00707",
+   "message": "6a68974aee5fea8d7f2fba86",
+   "seq": 4,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-28 17:21",
+   "rank": 12
+  },
+  {
+   "thread": "6a64a79f1471d3f8a6f00707",
+   "message": "6a64c44d758e5f60daeff37b",
+   "seq": 2,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-25 19:43",
+   "rank": 12
+  },
+  {
+   "thread": "6a677d1e9c5991a1216db038",
+   "message": "6a68d9f91abcabbcccbb8ec9",
+   "seq": 3,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-28 22:05",
+   "rank": 15
+  },
+  {
+   "thread": "6a677d1e9c5991a1216db038",
+   "message": "6a68d7c59ed665b22e714fc6",
+   "seq": 2,
+   "direction": "inbound",
+   "sender": "customer",
+   "sentAt": "2026-07-28 21:51",
+   "rank": 15
+  },
+  {
+   "thread": "6a68789d4440e9e823cc412d",
+   "message": "6a68ae8ca4477cf758b8077b",
+   "seq": 4,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-28 19:00",
+   "rank": 20
+  },
+  {
+   "thread": "6a6891550aa7bedb3766e6fc",
+   "message": "6a68bb2ca223a13efee78627",
+   "seq": 3,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-28 19:54",
+   "rank": 23
+  },
+  {
+   "thread": "6a6891550aa7bedb3766e6fc",
+   "message": "6a68b7b49ed665b22e69e44f",
+   "seq": 2,
+   "direction": "inbound",
+   "sender": "customer",
+   "sentAt": "2026-07-28 19:37",
+   "rank": 23
+  }
+ ],
+ "warranty_claim_intake_completeness": [
+  {
+   "thread": "6a5ff46d443721b311a846e9",
+   "message": "6a68b0613a8c24bd1530eec6",
+   "seq": 5,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-28 19:07",
+   "rank": 8
+  },
+  {
+   "thread": "6a60d8359b09304408a69d0c",
+   "message": "6a60d8728d67b8014720c8bf",
+   "seq": 2,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-22 20:21",
+   "rank": 10
+  },
+  {
+   "thread": "6a68b296271a2bc85510b0aa",
+   "message": "6a68d1be4577bed436d4cc81",
+   "seq": 6,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-28 21:29",
+   "rank": 25
+  },
+  {
+   "thread": "6a68b296271a2bc85510b0aa",
+   "message": "6a68cb02f59a6a63ef6e6502",
+   "seq": 4,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-28 21:00",
+   "rank": 25
+  },
+  {
+   "thread": "6a68b296271a2bc85510b0aa",
+   "message": "6a68b296dd58bd1c2e43f098",
+   "seq": 1,
+   "direction": "inbound",
+   "sender": "customer",
+   "sentAt": "2026-07-28 19:15",
+   "rank": 25
+  },
+  {
+   "thread": "6a68b296271a2bc85510b0aa",
+   "message": "6a68b2aa25f7deecafa7d001",
+   "seq": 2,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-28 19:37",
+   "rank": 25
+  },
+  {
+   "thread": "6a68b296271a2bc85510b0aa",
+   "message": "6a68d8399ed665b22e71699a",
+   "seq": 7,
+   "direction": "inbound",
+   "sender": "customer",
+   "sentAt": "2026-07-28 21:55",
+   "rank": 25
+  }
+ ],
+ "courtesy_replacement_without_proof": [
+  {
+   "thread": "6a5b8a7981e44facb76d02a8",
+   "message": "6a5b99f8211a7d63bd1d31c6",
+   "seq": 4,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-18 20:52",
+   "rank": 6
+  },
+  {
+   "thread": "6a5b8a7981e44facb76d02a8",
+   "message": "6a5b8a79cc7964da29afad90",
+   "seq": 1,
+   "direction": "inbound",
+   "sender": "customer",
+   "sentAt": "2026-07-18 19:45",
+   "rank": 6
+  },
+  {
+   "thread": "6a5b8a7981e44facb76d02a8",
+   "message": "6a5b8da64c6e7ec198fc2896",
+   "seq": 2,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-18 20:00",
+   "rank": 6
+  },
+  {
+   "thread": "6a5b8a7981e44facb76d02a8",
+   "message": "6a5d611eadbc5a757e16c421",
+   "seq": 5,
+   "direction": "inbound",
+   "sender": "customer",
+   "sentAt": "2026-07-20 05:12",
+   "rank": 6
+  },
+  {
+   "thread": "6a622b83bd1448353e3138a9",
+   "message": "6a64bb75d6467e322f29475a",
+   "seq": 10,
+   "direction": "outbound",
+   "sender": "agent",
+   "sentAt": "2026-07-25 19:08",
+   "rank": 30
+  }
+ ]
+}
