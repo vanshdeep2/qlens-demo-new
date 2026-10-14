@@ -51,8 +51,8 @@ function RoleSwitcher() {
       </button>
       <Popover open={open} onClose={() => setOpen(false)} className="right-0 top-11 w-60 p-1.5">
         {[
-          ['agent', 'Employee', 'Agent view: Q-Bytes, progress, KPIs'],
-          ['coach', 'Coach', 'Team view: activity, queue, evidence'],
+          ['agent', 'Employee', 'Agent view: Q-tips, progress, numbers'],
+          ['coach', 'Coach', 'Team view: 1:1s, to-dos, evidence'],
         ].map(([k, label, sub]) => (
           <button
             key={k}
@@ -182,7 +182,7 @@ function SearchBox({ query, setQuery, onPickAgent }) {
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setFocus(true)}
         onBlur={() => setTimeout(() => setFocus(false), 150)}
-        placeholder={isCoach ? 'Search employee...' : 'Search your Q-Bytes...'}
+        placeholder={isCoach ? 'Search employee...' : 'Search your Q-tips...'}
         className="w-full pl-9 pr-12 py-2 text-sm rounded-lg border border-dashed border-(--color-line) bg-(--color-paper) focus:bg-white focus:border-solid focus:border-(--color-teal) outline-none"
       />
       <kbd className="hidden sm:block absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-(--color-ink-mute) border border-(--color-line) rounded px-1.5 py-0.5 bg-white">⌘ K</kbd>
@@ -274,7 +274,7 @@ export function EventLog() {
       <Drawer open={open} onClose={() => setOpen(false)} title="Reported to QIQ" subtitle="Every event QLens sends back. QIQ decides, QLens shows, tracks and reports.">
         {state.events.length === 0 && (
           <div className="text-sm text-(--color-ink-soft) py-8 text-center">
-            No events yet. Acknowledge a Q-Byte, nudge an agent, or schedule a session and it appears here.
+            No events yet. Read a Q-tip, nudge an agent, or book a session and it appears here.
           </div>
         )}
         <div className="space-y-2">

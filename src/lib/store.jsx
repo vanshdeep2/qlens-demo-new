@@ -1,98 +1,90 @@
-import { createContext, useContext, useEffect, useReducer } from 'react'
-import { agents, allCards, BADGES, PRE_ACKED, initialQueue, levelFor, TIERS, XP_RULES, OVERDUE_AFTER_DAYS } from '../data/qlensData'
+import { createContext, useContext, useReducer } from 'react'
+import { agents, allCards, initialQueue, LATE_AFTER, levelFor, OVERDUE_AFTER_DAYS, seedGrowth, TIERS, topicBadges, trainingRecos, XP_RULES } from '../data/qlensData'
 
-const KEY = 'qlens-demo-v5'
 const Ctx = createContext(null)
 
 let uid = 0
 const id = (p) => `${p}-${Date.now().toString(36)}-${(uid++).toString(36)}`
 const now = () => new Date().toISOString()
+const firstName = (a) => agents[a].name.split(' ')[0]
 
 export function streakOf(state, agentId) {
   const p = state.progress[agentId]
   return agents[agentId].seed.streakBeforeToday + (p.todayDone ? 1 : 0)
 }
 
-function metrics(state, agentId) {
-  const p = state.progress[agentId]
-  return { acked: p.acked, dailyGoals: p.dailyGoals, streak: streakOf(state, agentId), coachingAcked: p.coachingAcked, sessions: p.sessions }
+export function lateAfter(q) {
+  return LATE_AFTER[q.trigger === 'critical_failure' ? 'critical_failure' : q.type]
+}
+export function isLate(q) {
+  return q.status === 'awaiting' && q.arrivedDaysAgo >= lateAfter(q)
 }
 
-export function badgeProgress(state, agentId) {
-  const m = metrics(state, agentId)
-  return BADGES.map((b) => ({ ...b, value: Math.min(m[b.metric], b.goal), earnedAt: state.badgesEarned[agentId]?.[b.id] || null }))
+export function badgesFor(state, agentId) {
+  const extra = state.badgeBumps[agentId] || {}
+  return (topicBadges[agentId] || []).map((b) => ({ ...b, resolved: b.resolved + (extra[b.topic] || 0) }))
 }
 
-function awardBadges(state, agentId, celebrate) {
-  const m = metrics(state, agentId)
-  const earned = { ...(state.badgesEarned[agentId] || {}) }
-  for (const b of BADGES) {
-    if (!earned[b.id] && m[b.metric] >= b.goal) {
-      earned[b.id] = now()
-      if (celebrate) celebrate.push({ id: id('c'), type: 'badge', badgeId: b.id })
-    }
-  }
-  return { ...state, badgesEarned: { ...state.badgesEarned, [agentId]: earned } }
+export function weekXp(state, agentId) {
+  return agents[agentId].seed.weekXp + (state.progress[agentId].xp - agents[agentId].seed.xp)
 }
 
 function initState() {
   const cards = {}
-  for (const c of allCards) cards[c.id] = { status: c.heldForReview ? 'held' : PRE_ACKED.includes(c.id) ? 'done' : 'pending', ackAt: PRE_ACKED.includes(c.id) ? now() : null }
+  const PRE_READ = ['michael-closing', 'michael-empathy', 'janine-verification', 'thabo-hold', 'pieter-empathy', 'ayanda-hold']
+  for (const c of allCards) {
+    cards[c.id] = { status: c.heldForReview ? 'held' : c.withdrawn ? 'withdrawn' : PRE_READ.includes(c.id) ? 'done' : 'pending', ackAt: PRE_READ.includes(c.id) ? now() : null }
+  }
   const progress = {}
   for (const a of Object.values(agents)) {
-    const preAcked = allCards.filter((c) => c.agentId === a.id && PRE_ACKED.includes(c.id))
     progress[a.id] = {
       xp: a.seed.xp,
-      acked: a.seed.acked,
-      dailyGoals: a.seed.dailyGoals,
-      sessions: a.seed.sessions,
-      coachingAcked: a.seed.coachingAcked,
       freezes: a.seed.freezes,
-      todayDone: preAcked.length > 0,
+      sessions: 0,
+      todayDone: allCards.some((c) => c.agentId === a.id && PRE_READ.includes(c.id)),
       goalAwarded: false,
+      growth: (seedGrowth[a.id] || []).map((g) => ({ ...g })),
     }
   }
+  const training = Object.fromEntries(trainingRecos.map((t) => [t.id, { status: t.status, reason: null }]))
   let s = {
     persona: 'agent',
     agentId: 'hady',
     cards,
     progress,
-    badgesEarned: {},
+    badgeBumps: {},
     notifications: { coach: [], ...Object.fromEntries(Object.keys(agents).map((k) => [k, []])) },
     celebrations: {},
     nudges: {},
-    queue: initialQueue,
+    queue: initialQueue.map((q) => ({ ...q, focus: [...q.focus] })),
+    training,
     notes: { hady: [{ text: 'Strong tone on email. Keep an eye on warranty intake.', at: now() }] },
     events: [],
     popupSeen: {},
-    queuedFromAttention: {},
+    flagsDone: {},
     sidebarCollapsed: false,
     showSources: false,
     coachDone: [],
     reviewed: {},
   }
-  // seed notifications
   s.notifications.hady = [
-    { id: id('n'), text: '3 new Q-Bytes are ready for you.', at: now(), read: false, kind: 'cards' },
-    { id: id('n'), text: 'A coaching session has been set up for you.', at: now(), read: false, kind: 'session' },
+    { id: id('n'), text: '4 new Q-tips are ready for you.', at: now(), read: false, kind: 'cards' },
+    { id: id('n'), text: 'Your weekly 1:1 has been booked.', at: now(), read: false, kind: 'session' },
   ]
-  s.notifications.aidza = [{ id: id('n'), text: '3 new Q-Bytes are ready for you.', at: now(), read: false, kind: 'cards' }]
+  s.notifications.aidza = [{ id: id('n'), text: '3 new Q-tips are ready for you.', at: now(), read: false, kind: 'cards' }]
   s.notifications.coach = [
-    { id: id('n'), text: 'Cards delivered to 10 agents this morning.', at: now(), read: false, kind: 'cards' },
-    { id: id('n'), text: '3 cards are overdue for acknowledgement.', at: now(), read: false, kind: 'overdue' },
+    { id: id('n'), text: 'Emailed to you: critical failure for Nomsa Dlamini. The 1:1 is not booked yet.', at: now(), read: false, kind: 'cf' },
+    { id: id('n'), text: 'Weekly 1:1 packets are ready for all 10 agents.', at: now(), read: false, kind: 'session' },
+    { id: id('n'), text: '3 Q-tips are overdue.', at: now(), read: false, kind: 'overdue' },
   ]
-  for (const a of Object.keys(agents)) s = awardBadges(s, a, null)
-  return s
-}
-
-function load() {
-  try {
-    const raw = localStorage.getItem(KEY)
-    if (raw) return JSON.parse(raw)
-  } catch {
-    /* storage unavailable */
+  // Events QLens has already reported today (clock rules)
+  for (const q of s.queue.filter(isLate)) {
+    s.events = log(s, 'session_late', `${agents[q.agentId].name}: ${q.topic} not booked after ${q.arrivedDaysAgo} working days`, q.agentId)
   }
-  return initState()
+  for (const c of allCards.filter((c) => c.deliveredDaysAgo >= OVERDUE_AFTER_DAYS && cards[c.id].status === 'pending')) {
+    s.events = log(s, 'card_overdue', `${agents[c.agentId].name}: "${c.title}" unread for ${c.deliveredDaysAgo} days`, c.agentId)
+  }
+  return s
 }
 
 function log(state, type, text, agentId) {
@@ -106,6 +98,10 @@ function notify(state, recipient, text, kind) {
 function pushCelebrations(state, agentId, list) {
   if (!list.length) return state.celebrations
   return { ...state.celebrations, [agentId]: [...(state.celebrations[agentId] || []), ...list] }
+}
+
+function done(state, text) {
+  return [{ text, at: now() }, ...state.coachDone]
 }
 
 function reducer(state, action) {
@@ -124,7 +120,8 @@ function reducer(state, action) {
       return { ...state, showSources: !state.showSources }
     case 'reviewed': {
       const s = { ...state, reviewed: { ...state.reviewed, [action.id]: true } }
-      s.coachDone = [{ text: action.text, at: now() }, ...state.coachDone]
+      s.coachDone = done(state, action.text)
+      s.events = log(s, 'held_item_reviewed', action.text, action.agentId)
       return s
     }
 
@@ -133,22 +130,24 @@ function reducer(state, action) {
       if (!card || state.cards[card.id].status === 'done') return state
       const a = card.agentId
       const before = levelFor(state.progress[a].xp)
-      const cel = [{ id: id('c'), type: 'xp', amount: card.xp, reason: card.tier === TIERS.COACHING ? 'Coaching card' : 'Q-Byte' }]
-      let p = { ...state.progress[a], xp: state.progress[a].xp + card.xp, acked: state.progress[a].acked + 1, todayDone: true }
-      if (card.tier === TIERS.COACHING) p.coachingAcked += 1
+      const cel = [{ id: id('c'), type: 'xp', amount: card.xp, reason: card.tier === TIERS.WEEKLY ? 'Weekly Q-tip read' : 'Q-tip read' }]
+      let p = { ...state.progress[a], xp: state.progress[a].xp + card.xp, todayDone: true }
       let s = { ...state, cards: { ...state.cards, [card.id]: { status: 'done', ackAt: now() } } }
-      const todays = allCards.filter((c) => c.agentId === a && c.deliveredDaysAgo === 0 && !c.heldForReview)
+      const todays = allCards.filter((c) => c.agentId === a && c.deliveredDaysAgo === 0 && !c.heldForReview && !c.withdrawn)
       if (!p.goalAwarded && todays.every((c) => s.cards[c.id].status === 'done')) {
-        p = { ...p, xp: p.xp + XP_RULES.dailyGoal, dailyGoals: p.dailyGoals + 1, goalAwarded: true }
+        p = { ...p, xp: p.xp + XP_RULES.dailyGoal, goalAwarded: true }
         cel.push({ id: id('c'), type: 'goal', amount: XP_RULES.dailyGoal })
       }
+      // A read "you did it" Q-tip creates a pending Implemented Bonus (Growth XP)
+      if (card.positive && card.followup?.verdict === 'applied') {
+        p = { ...p, growth: [{ id: id('g'), topic: card.title.replace('You Did It: ', ''), amount: XP_RULES.implementedBonus, status: 'pending', confirmsInDays: XP_RULES.confirmDays, fresh: true }, ...p.growth] }
+        cel.push({ id: id('c'), type: 'pending', amount: XP_RULES.implementedBonus })
+      }
       s = { ...s, progress: { ...s.progress, [a]: p } }
-      s = awardBadges(s, a, cel)
       const after = levelFor(p.xp)
       if (after.level > before.level) cel.push({ id: id('c'), type: 'level', level: after.level, name: after.name })
       s.celebrations = pushCelebrations(s, a, cel)
-      s.events = log(s, 'card_acknowledged', `${agents[a].name} acknowledged "${card.title}" (+${card.xp} XP)`, a)
-      s.notifications = notify(s, 'coach', `${agents[a].name} acknowledged "${card.title}".`, 'ack')
+      s.events = log(s, 'card_read', `${agents[a].name} read "${card.title}" (+${card.xp} XP shown instantly, confirmed by QIQ)`, a)
       return s
     }
     case 'later': {
@@ -157,34 +156,35 @@ function reducer(state, action) {
       s.events = log(s, 'card_deferred', `${agents[card.agentId].name} saved "${card.title}" for later`, card.agentId)
       return s
     }
-    case 'reopen': {
-      return { ...state, cards: { ...state.cards, [action.cardId]: { status: 'pending', ackAt: null } } }
-    }
     case 'dismissCelebration': {
       const list = (state.celebrations[action.agentId] || []).filter((c) => c.id !== action.id)
       return { ...state, celebrations: { ...state.celebrations, [action.agentId]: list } }
-    }
-    case 'useFreeze': {
-      const p = state.progress[action.agentId]
-      if (p.freezes <= 0) return state
-      return { ...state, progress: { ...state.progress, [action.agentId]: { ...p, freezes: p.freezes - 1 } } }
     }
 
     case 'nudge': {
       const card = allCards.find((c) => c.id === action.cardId)
       let s = { ...state, nudges: { ...state.nudges, [card.id]: now() } }
       s.notifications = notify(s, card.agentId, `Your coach sent a reminder: "${card.title}" is waiting for you.`, 'nudge')
-      s.coachDone = [{ text: `Nudged ${agents[card.agentId].name.split(' ')[0]} on "${card.title}"`, at: now() }, ...state.coachDone]
-      s.events = log(s, 'nudge_sent', `Coach nudged ${agents[card.agentId].name} on "${card.title}"`, card.agentId)
+      s.coachDone = done(state, `Nudged ${firstName(card.agentId)} on "${card.title}"`)
+      s.events = log(s, 'card_nudged', `Coach nudged ${agents[card.agentId].name} on "${card.title}"`, card.agentId)
       return s
     }
     case 'schedule': {
       const q = state.queue.find((x) => x.id === action.queueId)
-      const wasScheduled = q.status === 'scheduled'
+      const was = q.status === 'scheduled'
       let s = { ...state, queue: state.queue.map((x) => (x.id === q.id ? { ...x, status: 'scheduled', date: action.date, time: action.time } : x)) }
-      s.notifications = notify(s, q.agentId, wasScheduled ? 'Your coaching session has been moved.' : 'A coaching session has been set up for you.', 'session')
-      s.coachDone = [{ text: `${wasScheduled ? 'Moved' : 'Scheduled'} ${agents[q.agentId].name.split(' ')[0]}'s 1:1 on ${q.topic.toLowerCase()}`, at: now() }, ...state.coachDone]
-      s.events = log(s, 'coaching_status_changed', `${agents[q.agentId].name}: ${q.topic} → Scheduled for ${action.date} ${action.time}`, q.agentId)
+      s.notifications = notify(s, q.agentId, was ? 'Your 1:1 has been moved.' : 'A 1:1 with your coach has been booked.', 'session')
+      s.coachDone = done(state, `${was ? 'Moved' : 'Booked'} ${firstName(q.agentId)}'s ${q.type === 'weekly' ? 'weekly 1:1' : '1:1'}`)
+      s.events = log(s, was ? 'session_rescheduled' : 'session_scheduled', `${agents[q.agentId].name}: ${q.topic} → ${action.date} ${action.time}`, q.agentId)
+      return s
+    }
+    case 'decline': {
+      const q = state.queue.find((x) => x.id === action.queueId)
+      if (q.trigger === 'critical_failure') return state
+      let s = { ...state, queue: state.queue.map((x) => (x.id === q.id ? { ...x, status: 'declined', declineReason: action.reason } : x)) }
+      if (q.status === 'scheduled') s.notifications = notify(s, q.agentId, 'Your 1:1 has been cancelled by your coach.', 'session')
+      s.coachDone = done(state, `Declined ${firstName(q.agentId)}'s 1:1 (${action.reason.toLowerCase()})`)
+      s.events = log(s, 'session_declined', `${agents[q.agentId].name}: ${q.topic} declined · ${action.reason}. QIQ returns the topics to next week's agenda.`, q.agentId)
       return s
     }
     case 'closeOut': {
@@ -196,25 +196,30 @@ function reducer(state, action) {
         const p = { ...s.progress[a], sessions: s.progress[a].sessions + 1, xp: s.progress[a].xp + XP_RULES.sessionAttended }
         s = { ...s, progress: { ...s.progress, [a]: p } }
         const cel = [{ id: id('c'), type: 'xp', amount: XP_RULES.sessionAttended, reason: 'Attended your 1:1' }]
-        s = awardBadges(s, a, cel)
         const after = levelFor(p.xp)
         if (after.level > before.level) cel.push({ id: id('c'), type: 'level', level: after.level, name: after.name })
         s.celebrations = pushCelebrations(s, a, cel)
-        s.notifications = notify(s, a, `+${XP_RULES.sessionAttended} XP for attending your coaching session.`, 'xp')
+        s.notifications = notify(s, a, `+${XP_RULES.sessionAttended} XP for attending your 1:1.`, 'xp')
       }
-      s.coachDone = [{ text: `Closed out ${agents[a].name.split(' ')[0]}'s 1:1 on ${q.topic.toLowerCase()}`, at: now() }, ...state.coachDone]
-      s.events = log(s, 'coaching_status_changed', `${agents[a].name}: ${q.topic} → Closed (${action.closeOut.outcome})${action.closeOut.smart ? ' with SMART form' : ''}`, a)
+      s.coachDone = done(state, `Closed out ${firstName(a)}'s 1:1 on ${q.topic.toLowerCase()}`)
+      s.events = log(s, 'session_closed_out', `${agents[a].name}: ${q.topic} · ${action.closeOut.happened ? action.closeOut.outcome : 'did not happen'}${action.closeOut.smart ? ' · SMART form' : ''}`, a)
       return s
     }
-    case 'queueFromAttention': {
+    case 'addToWeekly': {
       const item = action.item
-      const q = {
-        id: id('q'), agentId: item.agentId, topicKey: item.id, topic: item.text.split('.')[0], source: `Coach-initiated · ${item.type}`,
-        status: 'awaiting', flaggedDaysAgo: 0, whyFlagged: item.text, talkingPoints: ['Review the flagged interaction together.', 'Agree one change to try this week.'],
+      const wk = state.queue.find((q) => q.agentId === item.agentId && q.type === 'weekly' && q.status !== 'closed' && q.status !== 'declined')
+      let s = { ...state, flagsDone: { ...state.flagsDone, [item.id]: true } }
+      if (wk) {
+        s.queue = state.queue.map((q) => (q.id === wk.id ? { ...q, focus: [...q.focus, { topic: item.type, saw: item.text, workOn: 'Added by you from a QIQ flag.', sop: null, training: [], followup: null, coachAdded: true }] } : q))
       }
-      let s = { ...state, queue: [q, ...state.queue], queuedFromAttention: { ...state.queuedFromAttention, [item.id]: true } }
-      s.coachDone = [{ text: `Added ${agents[item.agentId].name.split(' ')[0]} to the 1:1 queue (${item.type})`, at: now() }, ...state.coachDone]
-      s.events = log(s, 'coaching_requested', `Coach added ${agents[item.agentId].name} to the coaching queue (${item.type})`, item.agentId)
+      s.coachDone = done(state, `Added "${item.type}" to ${firstName(item.agentId)}'s weekly 1:1`)
+      return s
+    }
+    case 'training': {
+      const t = trainingRecos.find((x) => x.id === action.recoId)
+      let s = { ...state, training: { ...state.training, [t.id]: { status: action.status, reason: action.reason || null } } }
+      s.coachDone = done(state, `Training for ${firstName(t.agentId)} marked ${action.status.replace('_', ' ')}`)
+      s.events = log(s, 'training_status_changed', `${agents[t.agentId].name}: ${t.topic} → ${action.status}`, t.agentId)
       return s
     }
     case 'note':
@@ -227,19 +232,16 @@ function reducer(state, action) {
 }
 
 export function StoreProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, null, load)
-  useEffect(() => {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(state))
-    } catch {
-      /* ignore */
-    }
-  }, [state])
+  // Demo runs fresh on every load: no persistence, so a page refresh
+  // always returns to the day's starting state.
+  const [state, dispatch] = useReducer(reducer, null, initState)
   return <Ctx.Provider value={{ state, dispatch }}>{children}</Ctx.Provider>
 }
 
 export const useStore = () => useContext(Ctx)
 
 export function cardsFor(state, agentId) {
-  return allCards.filter((c) => c.agentId === agentId).map((c) => ({ ...c, ...state.cards[c.id], nudgedAt: state.nudges[c.id] || null, overdue: state.cards[c.id].status !== 'done' && !c.heldForReview && c.deliveredDaysAgo >= OVERDUE_AFTER_DAYS }))
+  return allCards
+    .filter((c) => c.agentId === agentId)
+    .map((c) => ({ ...c, ...state.cards[c.id], nudgedAt: state.nudges[c.id] || null, overdue: state.cards[c.id].status !== 'done' && !c.heldForReview && !c.withdrawn && c.deliveredDaysAgo >= OVERDUE_AFTER_DAYS }))
 }

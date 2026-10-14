@@ -15,7 +15,7 @@ Opens at http://localhost:5173. `npm run build` outputs a static site to `dist/`
 
 - **Switch persona:** the Employee / Coach pill in the top bar.
 - **Switch agent (Employee view):** click your name in the top right and pick from the list. Aidza Machuca and Hady Magdy are marked REAL DATA.
-- **Reset:** the red log-out icon puts everything back to the start of the day. Use it before each run-through.
+- **Reset:** the red log-out icon, or simply refreshing the page, puts everything back to the start of the day. Nothing is saved between page loads, so a refresh is a clean run-through every time.
 - The UI carries no real/seeded labels. The section below is the record of what is real.
 
 ### How the pages are organised

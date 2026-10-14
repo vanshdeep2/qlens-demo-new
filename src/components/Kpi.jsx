@@ -29,7 +29,7 @@ export function LineChart({ points, unit, target, color = 'var(--color-teal)', h
   const padR = 18
   const fs = w > 400 ? 12 : 9
   const padT = 10
-  const padB = 22
+  const padB = w > 400 ? 24 : 28
   const n = points.length
   const pMax = Math.max(...points)
   const pMin = Math.min(...points)
@@ -65,7 +65,7 @@ export function LineChart({ points, unit, target, color = 'var(--color-teal)', h
         {ticks.map((t, i) => (
           <g key={i}>
             <line x1={padL} x2={w - padR} y1={Y(t)} y2={Y(t)} stroke="var(--color-line)" strokeWidth="1" />
-            <text x={padL - 6} y={Y(t) + 3} textAnchor="end" fontSize={fs} fill="var(--color-ink-mute)">{t}{unit === '/5' ? '' : unit}</text>
+            <text x={padL - 6} y={Y(t) + (i === 0 ? -6 : 3)} textAnchor="end" fontSize={fs} fill="var(--color-ink-mute)">{t}{unit === '/5' ? '' : unit}</text>
           </g>
         ))}
         {showTarget && (
@@ -149,9 +149,7 @@ export function KpiRow({ kpis, compact }) {
         <Illustrative>Illustrative KPIs</Illustrative>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <KpiCard kpi={kpis.aht} compact={compact} />
-        <KpiCard kpi={kpis.fcr} compact={compact} />
-        <KpiCard kpi={kpis.agentBehaviour} compact={compact} />
+        {Object.values(kpis).map((k) => <KpiCard key={k.key} kpi={k} compact={compact} />)}
       </div>
     </div>
   )
@@ -159,12 +157,12 @@ export function KpiRow({ kpis, compact }) {
 
 export function KpiTiles({ kpis, title = 'Your numbers', stack = false }) {
   const [open, setOpen] = useState(null)
-  const list = [kpis.aht, kpis.fcr, kpis.agentBehaviour]
+  const list = Object.values(kpis)
   return (
     <div>
       <div className="flex items-center gap-2 mb-3">
         <div className="text-[15px] font-semibold">{title}</div>
-        <span className="text-[12px] text-(--color-ink-mute)">Yesterday · tap for the trend</span>
+        <span className="text-[12px] text-(--color-ink-mute)">Yesterday · email metrics · tap for the trend</span>
         <Illustrative />
       </div>
       <div className={`grid grid-cols-1 ${stack ? '' : 'sm:grid-cols-3'} gap-3`}>

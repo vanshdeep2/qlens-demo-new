@@ -1,5 +1,5 @@
-import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, Hourglass, Info, Lightbulb, Telescope, Zap } from 'lucide-react'
-import { TIERS } from '../data/qlensData'
+import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, Hourglass, Info, Lightbulb, PartyPopper, Telescope, Zap } from 'lucide-react'
+import { SECTION_LABELS, TIERS } from '../data/qlensData'
 import { useStore } from '../lib/store'
 
 export function weekLabel() {
@@ -20,7 +20,7 @@ export function statusNote(card) {
 }
 
 export function XpPill({ card, muted }) {
-  const coaching = card.tier === TIERS.COACHING
+  const coaching = card.tier === TIERS.WEEKLY
   return (
     <span className={`inline-flex items-center gap-1 text-[12px] font-bold px-2.5 py-1 rounded-full shrink-0 ${muted ? 'bg-(--color-paper) text-(--color-ink-mute)' : coaching ? 'bg-(--color-amber) text-white' : 'bg-(--color-teal) text-white'}`}>
       <Zap size={12} fill="currentColor" /> {card.xp} XP
@@ -31,7 +31,7 @@ export function XpPill({ card, muted }) {
 // The readable body of a card: just the content and the actions.
 export function CardBody({ card, onLater }) {
   const { dispatch } = useStore()
-  const coaching = card.tier === TIERS.COACHING
+  const coaching = card.tier === TIERS.WEEKLY
   const done = card.status === 'done'
   const s = card.sections
   const weekly = coaching ? card.weekly || [{ v: String(card.evidence.threadCount), k: 'contacts this week showed the same pattern' }] : null
@@ -50,14 +50,13 @@ export function CardBody({ card, onLater }) {
           </div>
         </div>
       )}
-      <div className="bg-white rounded-2xl border border-(--color-line) px-5 sm:px-7 py-6 space-y-3.5 text-[15px] leading-[1.75] text-(--color-ink)">
-        <p>{s.opening} {s.trend}</p>
-        <p>{s.focus}</p>
-        <p className="font-medium text-(--color-teal-dark)">{s.guidance}</p>
-        <p>
-          A simple way to phrase it is: <span className="italic text-(--color-blue)">“{s.example}”</span> {s.challenge}
-        </p>
-        <p className="text-(--color-ink-soft)">{s.why}</p>
+      <div className="bg-white rounded-2xl border border-(--color-line) px-5 sm:px-7 py-5 divide-y divide-(--color-line)">
+        {[['saw', SECTION_LABELS.saw], ['try', SECTION_LABELS.try], ['why', SECTION_LABELS.why]].map(([k, label]) => (
+          <div key={k} className="py-3 first:pt-0 last:pb-0">
+            <div className={`text-[11px] font-semibold tracking-[0.12em] uppercase ${k === 'try' ? (card.positive ? 'text-(--color-teal-dark)' : coaching ? 'text-(--color-amber)' : 'text-(--color-teal-dark)') : 'text-(--color-ink-mute)'}`}>{label}</div>
+            <p className={`text-[15px] leading-[1.65] mt-1 ${k === 'try' ? 'font-medium text-(--color-ink)' : k === 'why' ? 'text-(--color-ink-soft)' : 'text-(--color-ink)'}`}>{s[k]}</p>
+          </div>
+        ))}
       </div>
 
       <div className="mt-5 flex flex-col items-center gap-2">
@@ -79,7 +78,7 @@ export function CardBody({ card, onLater }) {
               </button>
             )}
             <span className="inline-flex items-center gap-1.5 text-[12.5px] text-(--color-ink-mute) mt-1">
-              <Info size={13} /> {coaching ? 'Coaching cards come from your weekly review.' : 'A new Q-Byte unlocks tomorrow.'}
+              <Info size={13} /> {coaching ? 'Weekly Q-tips come from your weekly review.' : 'New Q-tips arrive tomorrow.'}
             </span>
           </>
         )}
@@ -90,7 +89,7 @@ export function CardBody({ card, onLater }) {
 
 // Collapsible row, used for "Done today", "Saved for later" and search results.
 export default function QByteCard({ card, open, onToggle }) {
-  const coaching = card.tier === TIERS.COACHING
+  const coaching = card.tier === TIERS.WEEKLY
   const done = card.status === 'done'
   const note = statusNote(card)
   return (
@@ -100,13 +99,13 @@ export default function QByteCard({ card, open, onToggle }) {
       style={{ borderLeft: `3px solid ${done ? '#d7dedb' : coaching ? 'var(--color-amber-stripe)' : 'var(--color-teal-stripe)'}` }}
     >
       <button onClick={onToggle} className="w-full text-left flex items-center gap-3 px-4 py-3">
-        {done ? <CheckCircle2 size={17} className="text-(--color-teal) shrink-0" /> : coaching ? <Telescope size={17} className="text-(--color-amber) shrink-0" /> : <Lightbulb size={17} className="text-(--color-teal-dark) shrink-0" />}
+        {done ? <CheckCircle2 size={17} className="text-(--color-teal) shrink-0" /> : card.positive ? <PartyPopper size={17} className="text-(--color-teal-dark) shrink-0" /> : coaching ? <Telescope size={17} className="text-(--color-amber) shrink-0" /> : <Lightbulb size={17} className="text-(--color-teal-dark) shrink-0" />}
         <span className="flex-1 min-w-0">
           <span className={`block text-[14.5px] font-medium truncate ${done ? 'text-(--color-ink-soft)' : ''}`}>{card.title}</span>
           {note && <span className="block text-[12px] text-(--color-ink-mute)">{note}</span>}
         </span>
         <XpPill card={card} muted={done} />
-        <span className="hidden sm:inline-flex items-center gap-1 text-[12px] text-(--color-ink-soft) shrink-0"><Hourglass size={12} /> {card.readMins} min</span>
+        <span className="hidden sm:inline-flex items-center gap-1 text-[12px] text-(--color-ink-soft) shrink-0"><Hourglass size={12} /> {card.readSecs} sec</span>
         {open ? <ChevronUp size={17} className="text-(--color-ink-mute)" /> : <ChevronDown size={17} className="text-(--color-ink-mute)" />}
       </button>
       {open && (
